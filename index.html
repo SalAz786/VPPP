@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBFAF7">
+<title>Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFAF7; --ink:#1C2430; --ink-2:#4A5461; --ink-3:#8A929D; --line:#E4E1DA; --line-2:#CFCBC1;
+  --spruce:#2F6F5E; --spruce-bg:#E4EFEA; --rust:#B24D3A; --rust-bg:#F6E7E2; --today:#F2EEE3;
+  --radius:10px; --font:"Manrope",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:1px solid var(--line-2);border-radius:var(--radius);padding:8px 14px;min-height:40px}
+button:hover{background:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--spruce);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button.primary:hover{background:#2B3542}
+button.icon{padding:0;width:40px;display:inline-flex;align-items:center;justify-content:center}
+button.link{border:none;padding:4px 6px;min-height:0;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+button.danger{color:var(--rust);border-color:var(--rust)}
+input[type=text],input[type=date],input[type=password],select,textarea{width:100%;background:#fff;border:1px solid var(--line-2);border-radius:var(--radius);padding:9px 12px;min-height:42px}
+textarea{min-height:80px;resize:vertical}
+label{display:block;font-size:13px;color:var(--ink-2);margin:12px 0 4px}
+.app{max-width:720px;margin:0 auto;padding:16px 16px 120px}
+
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:6px}
+.month{font-size:44px;font-weight:700;letter-spacing:-0.03em;line-height:1;margin:0}
+.month small{display:block;font-size:14px;font-weight:500;color:var(--ink-3);letter-spacing:0;margin-top:6px}
+.tools{display:flex;gap:6px}
+.sync-state{font-size:12px;color:var(--ink-3);text-align:right;min-height:18px;margin-bottom:10px}
+.sync-state.err{color:var(--rust)}
+
+.weekbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:8px;margin:10px 0 6px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day{text-align:center;padding:6px 0 4px;border-radius:8px;border:1px solid transparent}
+.day .n{font-size:18px;font-weight:700;line-height:1.1}
+.day .d{font-size:11px;color:var(--ink-3)}
+.day .c{display:block;height:4px;width:4px;border-radius:2px;margin:4px auto 0;background:transparent}
+.day.has .c{background:var(--ink-3)}
+.day.today{background:var(--today);border-color:var(--line-2)}
+.day.sel{border-color:var(--ink)}
+.range{font-size:13px;color:var(--ink-2);text-align:center;margin:4px 0 14px}
+
+.tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{border:none;border-radius:0;border-bottom:2px solid transparent;padding:10px 14px;color:var(--ink-3);margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bucket{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;min-height:0}
+.bucket:hover{border-color:var(--line-2)}
+.bucket .nm{font-weight:700;display:flex;align-items:center;gap:8px}
+.bucket .st{font-size:13px;color:var(--ink-2);margin-top:2px}
+.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:10px}
+.bar div{height:100%;background:var(--ink)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+
+.lane{margin-bottom:18px}
+.lane h3{font-size:16px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.lane h3 span.cnt{font-size:12px;color:var(--ink-3);font-weight:500;margin-left:auto}
+.task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.task:last-child{border-bottom:1px solid var(--line)}
+.task input[type=checkbox]{margin-top:3px;width:18px;height:18px;accent-color:var(--spruce);flex:none}
+.task .t{flex:1;min-width:0;background:none;border:none;text-align:left;padding:0;min-height:0;border-radius:0}
+.task .t:hover{background:none}
+.task .title{overflow-wrap:anywhere}
+.task .meta{font-size:12px;color:var(--ink-3);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.task.done .title{color:var(--ink-3);text-decoration:line-through}
+.task .p1{color:var(--rust);font-weight:700}
+.late{color:var(--rust)}
+.empty{color:var(--ink-3);font-size:14px;padding:10px 0}
+.dayrow{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.dayrow .dl{font-size:13px;font-weight:700;color:var(--ink-2)}
+.dayrow .dl small{display:block;font-weight:400;color:var(--ink-3)}
+.dayrow.today .dl{color:var(--spruce)}
+.dayrow .task{border:none;padding:4px 0}
+
+.fab{position:fixed;right:16px;bottom:20px;left:auto;z-index:5;display:flex;gap:8px}
+.fab button{border-radius:24px;padding:12px 18px;min-height:48px;box-shadow:0 2px 10px rgba(28,36,48,.15);background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+
+.modal{position:fixed;inset:0;background:rgba(28,36,48,.45);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:0}
+.modal.open{display:flex}
+.sheet{background:var(--paper);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px 18px 28px;max-height:92vh;overflow:auto}
+@media(min-width:600px){.modal{align-items:center;padding:16px}.sheet{border-radius:16px}}
+.sheet h2{font-size:20px;margin:0 0 4px;font-weight:700}
+.sheet .hint{font-size:13px;color:var(--ink-3);margin:0 0 6px}
+.row{display:flex;gap:8px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.row .grow{flex:1}
+.swatches{display:flex;gap:8px;margin-top:4px}
+.swatches button{width:30px;height:30px;min-height:0;padding:0;border-radius:50%;border:2px solid transparent}
+.swatches button.on{border-color:var(--ink)}
+.proj-list{margin:6px 0 0;padding:0;list-style:none}
+.proj-list li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.proj-list li input{flex:1}
+.err{color:var(--rust);font-size:13px;margin-top:6px;min-height:18px}
+code{font-size:13px;background:#fff;border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+@media(prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <h1 class="month" id="monthTitle">September<small>2026</small></h1>
+    <div class="tools">
+      <button class="icon" id="btnToday" title="Go to this week" aria-label="Go to this week">&#8635;</button>
+      <button class="icon" id="btnProjects" title="Projects" aria-label="Manage projects">&#9776;</button>
+      <button id="btnSync" title="Sync with GitHub">Sync</button>
+    </div>
+  </div>
+  <div class="sync-state" id="syncState"></div>
+
+  <div class="weekbar">
+    <button class="icon" id="prevWeek" aria-label="Previous week">&#8249;</button>
+    <div class="days" id="days"></div>
+    <button class="icon" id="nextWeek" aria-label="Next week">&#8250;</button>
+  </div>
+  <div class="range" id="range"></div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" data-view="buckets" class="on">Buckets</button>
+    <button role="tab" data-view="board">Board</button>
+    <button role="tab" data-view="planner">Planner</button>
+    <button role="tab" data-view="overdue">Overdue</button>
+  </div>
+  <div id="view"></div>
+</div>
+
+<div class="fab"><button id="btnAdd">+ Task</button></div>
+
+<div class="modal" id="taskModal"><div class="sheet">
+  <h2 id="taskModalTitle">New task</h2>
+  <label for="tTitle">What needs doing</label>
+  <input type="text" id="tTitle" placeholder="Send draft to client">
+  <div class="err" id="tErr"></div>
+  <label for="tProject">Project</label>
+  <select id="tProject"></select>
+  <div class="grid2">
+    <div><label for="tDue">Due</label><input type="date" id="tDue"></div>
+    <div><label for="tPri">Priority</label><select id="tPri"><option value="P2">Normal</option><option value="P1">High</option><option value="P3">Low</option></select></div>
+  </div>
+  <label for="tNotes">Notes</label>
+  <textarea id="tNotes" placeholder="Optional"></textarea>
+  <div class="row">
+    <button class="danger" id="tDelete">Delete</button>
+    <span class="grow"></span>
+    <button id="tCancel">Cancel</button>
+    <button class="primary" id="tSave">Save task</button>
+  </div>
+</div></div>
+
+<div class="modal" id="projModal"><div class="sheet">
+  <h2>Projects</h2>
+  <p class="hint">Rename inline. Deleting a project deletes its tasks.</p>
+  <ul class="proj-list" id="projList"></ul>
+  <label for="pName">New project</label>
+  <div class="row" style="margin-top:0"><input type="text" id="pName" class="grow" placeholder="Project name"><button class="primary" id="pAdd">Add</button></div>
+  <div class="err" id="pErr"></div>
+  <div class="row"><button id="pExport">Export for Obsidian</button><button id="pJson">Export JSON</button><button id="pImport">Import JSON</button><input type="file" id="pFile" accept="application/json" hidden><span class="grow"></span><button id="pClose">Done</button></div>
+</div></div>
+
+<div class="modal" id="syncModal"><div class="sheet">
+  <h2>Sync with GitHub</h2>
+  <p class="hint">Stores <code>planner-data.json</code> in a repo you own. Use a private repo and a fine-grained token with Contents read/write on that repo only. The token is kept in this browser.</p>
+  <label for="sOwner">Owner</label><input type="text" id="sOwner" placeholder="your-github-username">
+  <label for="sRepo">Repository</label><input type="text" id="sRepo" placeholder="planner">
+  <label for="sBranch">Branch</label><input type="text" id="sBranch" placeholder="main">
+  <label for="sPath">File path</label><input type="text" id="sPath" placeholder="planner-data.json">
+  <label for="sToken">Token</label><input type="password" id="sToken" placeholder="github_pat_…" autocomplete="off">
+  <div class="err" id="sErr"></div>
+  <div class="row"><button class="link" id="sForget">Forget token</button><span class="grow"></span><button id="sClose">Close</button><button class="primary" id="sSave">Save and sync</button></div>
+</div></div>
+
+<script>
+(() => {
+const LS_KEY = 'planner.v1', LS_CFG = 'planner.sync.v1';
+const COLORS = ['#7F77DD','#1D9E75','#D85A30','#D4537E','#378ADD','#BA7517','#5F5E5A'];
+const DAY = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const $ = s => document.querySelector(s);
+
+let state = load();
+let weekStart = mondayOf(new Date());
+let view = 'buckets', editingId = null, projFilter = null;
+
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+function iso(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function parse(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function mondayOf(d){ const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const w = (x.getDay()+6)%7; x.setDate(x.getDate()-w); return x; }
+function addDays(d,n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function todayIso(){ return iso(new Date()); }
+function isoWeek(d){ const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay()||7; x.setUTCDate(x.getUTCDate()+4-day); const y0 = new Date(Date.UTC(x.getUTCFullYear(),0,1)); return Math.ceil((((x-y0)/864e5)+1)/7); }
+
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(LS_KEY)); if (s && s.projects) return s; } catch(e){}
+  const now = new Date().toISOString();
+  const projects = ['Personal branding','Style curator','Dooj','Karina','Work'].map((n,i)=>({id:uid(), name:n, color:COLORS[i], updatedAt:now}));
+  return { projects, tasks: [], deleted: {}, updatedAt: now };
+}
+function save(){ state.updatedAt = new Date().toISOString(); localStorage.setItem(LS_KEY, JSON.stringify(state)); render(); }
+function touch(o){ o.updatedAt = new Date().toISOString(); return o; }
+function project(id){ return state.projects.find(p=>p.id===id); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function render(){
+  const end = addDays(weekStart, 6);
+  const midMonth = addDays(weekStart, 3);
+  $('#monthTitle').innerHTML = MON[midMonth.getMonth()] + '<small>' + midMonth.getFullYear() + ' · week ' + isoWeek(midMonth) + '</small>';
+  $('#range').textContent = DAY[0] + ' ' + weekStart.getDate() + ' – ' + DAY[6] + ' ' + end.getDate() + (end.getMonth()!==weekStart.getMonth() ? ' ' + MON[end.getMonth()].slice(0,3) : '');
+  const t = todayIso();
+  $('#days').innerHTML = [...Array(7)].map((_,i)=>{ const d = addDays(weekStart,i), k = iso(d);
+    const has = state.tasks.some(x=>!x.done && x.due===k);
+    return `<div class="day ${k===t?'today':''} ${has?'has':''}"><div class="d">${DAY[i]}</div><div class="n">${d.getDate()}</div><span class="c"></span></div>`; }).join('');
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.view===view));
+  const v = $('#view');
+  if (view==='buckets') v.innerHTML = renderBuckets();
+  else if (view==='board') v.innerHTML = renderBoard();
+  else if (view==='planner') v.innerHTML = renderPlanner();
+  else v.innerHTML = renderOverdue();
+}
+
+function inWeek(x){ const s = iso(weekStart), e = iso(addDays(weekStart,6)); return x.due && x.due>=s && x.due<=e; }
+function taskHtml(x, showProject){
+  const p = project(x.projectId); const late = !x.done && x.due && x.due < todayIso();
+  return `<div class="task ${x.done?'done':''}">
+    <input type="checkbox" ${x.done?'checked':''} data-toggle="${x.id}" aria-label="Mark done">
+    <button class="t" data-edit="${x.id}"><div class="title">${esc(x.title)}</div>
+    <div class="meta">${showProject&&p?`<span><span class="dot" style="background:${p.color}"></span> ${esc(p.name)}</span>`:''}${x.due?`<span class="${late?'late':''}">${late?'overdue · ':''}${DAY[(parse(x.due).getDay()+6)%7]} ${parse(x.due).getDate()} ${MON[parse(x.due).getMonth()].slice(0,3)}</span>`:'<span>no date</span>'}${x.priority==='P1'?'<span class="p1">high</span>':''}${x.notes?'<span>notes</span>':''}</div></button></div>`;
+}
+function sortT(a,b){ return (a.done-b.done) || ((a.due||'9')>(b.due||'9')?1:-1) || ((a.priority||'P2')>(b.priority||'P2')?1:-1); }
+
+function renderBuckets(){
+  if (projFilter){ const p = project(projFilter); const ts = state.tasks.filter(x=>x.projectId===projFilter).sort(sortT);
+    return `<div class="lane"><h3><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<button class="link" data-back="1" style="margin-left:auto">All buckets</button></h3>${ts.length?ts.map(x=>taskHtml(x,false)).join(''):'<div class="empty">No tasks yet. Add one below.</div>'}</div>`; }
+  return `<div class="grid2">${state.projects.map(p=>{ const ts = state.tasks.filter(x=>x.projectId===p.id && (inWeek(x)||(!x.done && x.due && x.due<iso(weekStart)))); const d = ts.filter(x=>x.done).length; const pc = ts.length?Math.round(100*d/ts.length):0;
+    return `<button class="bucket" data-bucket="${p.id}"><div class="nm"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</div><div class="st">${ts.length? d+' of '+ts.length+' done this week':'Nothing due this week'}</div><div class="bar"><div style="width:${pc}%"></div></div></button>`; }).join('')}</div>`;
+}
+function renderBoard(){
+  return state.projects.map(p=>{ const ts = state.tasks.filter(x=>x.projectId===p.id && inWeek(x)).sort(sortT);
+    return `<div class="lane"><h3><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<span class="cnt">${ts.filter(x=>!x.done).length} open</span></h3>${ts.length?ts.map(x=>taskHtml(x,false)).join(''):'<div class="empty">Nothing due this week</div>'}</div>`; }).join('');
+}
+function renderPlanner(){
+  const t = todayIso();
+  return [...Array(7)].map((_,i)=>{ const d = addDays(weekStart,i), k = iso(d); const ts = state.tasks.filter(x=>x.due===k).sort(sortT);
+    return `<div class="dayrow ${k===t?'today':''}"><div class="dl">${DAY[i]}<small>${d.getDate()} ${MON[d.getMonth()].slice(0,3)}</small></div><div>${ts.length?ts.map(x=>taskHtml(x,true)).join(''):'<div class="empty">Free</div>'}</div></div>`; }).join('') +
+    (()=>{ const u = state.tasks.filter(x=>!x.done && !x.due); return u.length?`<div class="lane" style="margin-top:18px"><h3>Undated</h3>${u.map(x=>taskHtml(x,true)).join('')}</div>`:''; })();
+}
+function renderOverdue(){
+  const t = todayIso(); const ts = state.tasks.filter(x=>!x.done && x.due && x.due<t).sort(sortT);
+  return ts.length? `<div class="lane">${ts.map(x=>taskHtml(x,true)).join('')}</div>` : '<div class="empty">Nothing overdue. Nice.</div>';
+}
+
+$('#view').addEventListener('click', e=>{
+  const t = e.target.closest('[data-toggle],[data-edit],[data-bucket],[data-back]'); if(!t) return;
+  if (t.dataset.toggle){ const x = state.tasks.find(y=>y.id===t.dataset.toggle); x.done = !x.done; x.doneAt = x.done? todayIso(): null; touch(x); save(); }
+  else if (t.dataset.edit) openTask(t.dataset.edit);
+  else if (t.dataset.bucket){ projFilter = t.dataset.bucket; render(); }
+  else if (t.dataset.back){ projFilter = null; render(); }
+});
+$('#view').addEventListener('change', e=>{ const t = e.target.closest('[data-toggle]'); if(!t) return; });
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ view=b.dataset.view; projFilter=null; render(); });
+$('#prevWeek').onclick = ()=>{ weekStart = addDays(weekStart,-7); render(); };
+$('#nextWeek').onclick = ()=>{ weekStart = addDays(weekStart,7); render(); };
+$('#btnToday').onclick = ()=>{ weekStart = mondayOf(new Date()); render(); };
+
+function fillProjects(sel, val){ sel.innerHTML = state.projects.map(p=>`<option value="${p.id}" ${p.id===val?'selected':''}>${esc(p.name)}</option>`).join(''); }
+function openTask(id){
+  editingId = id; const x = id? state.tasks.find(y=>y.id===id) : null;
+  $('#taskModalTitle').textContent = x? 'Edit task':'New task';
+  $('#tTitle').value = x?x.title:''; fillProjects($('#tProject'), x?x.projectId:(projFilter||state.projects[0]?.id));
+  $('#tDue').value = x?(x.due||''):(view==='planner'?'':iso(weekStart)); $('#tPri').value = x?(x.priority||'P2'):'P2'; $('#tNotes').value = x?(x.notes||''):'';
+  $('#tDelete').style.visibility = x?'visible':'hidden'; $('#tErr').textContent='';
+  $('#taskModal').classList.add('open'); setTimeout(()=>$('#tTitle').focus(),50);
+}
+$('#btnAdd').onclick = ()=>openTask(null);
+$('#tCancel').onclick = ()=>$('#taskModal').classList.remove('open');
+$('#tTitle').addEventListener('input', ()=>$('#tErr').textContent='');
+$('#tSave').onclick = ()=>{
+  const title = $('#tTitle').value.trim(); if(!title){ $('#tErr').textContent='Enter a task first'; return; }
+  if(!state.projects.length){ $('#tErr').textContent='Create a project first'; return; }
+  const data = { title, projectId: $('#tProject').value, due: $('#tDue').value||null, priority: $('#tPri').value, notes: $('#tNotes').value.trim() };
+  if (editingId){ Object.assign(state.tasks.find(y=>y.id===editingId), data); touch(state.tasks.find(y=>y.id===editingId)); }
+  else state.tasks.push(touch({ id: uid(), done:false, doneAt:null, createdAt: todayIso(), ...data }));
+  $('#taskModal').classList.remove('open'); save();
+};
+$('#tDelete').onclick = ()=>{ if(!editingId) return; if(!confirm('Delete this task?')) return; state.tasks = state.tasks.filter(y=>y.id!==editingId); state.deleted[editingId] = new Date().toISOString(); $('#taskModal').classList.remove('open'); save(); };
+
+function renderProjList(){
+  $('#projList').innerHTML = state.projects.map(p=>`<li><span class="swatches">${COLORS.map(c=>`<button data-color="${p.id}|${c}" class="${p.color===c?'on':''}" style="background:${c};width:18px;height:18px" aria-label="Colour"></button>`).join('')}</span><input type="text" value="${esc(p.name)}" data-rename="${p.id}"><button class="icon danger" data-del="${p.id}" aria-label="Delete project">&#215;</button></li>`).join('') || '<li class="empty">No projects yet</li>';
+}
+$('#btnProjects').onclick = ()=>{ renderProjList(); $('#pErr').textContent=''; $('#projModal').classList.add('open'); };
+$('#pClose').onclick = ()=>$('#projModal').classList.remove('open');
+$('#pAdd').onclick = ()=>{ const n = $('#pName').value.trim(); if(!n){ $('#pErr').textContent='Enter a project name'; return; } state.projects.push(touch({id:uid(), name:n, color:COLORS[state.projects.length%COLORS.length]})); $('#pName').value=''; renderProjList(); save(); };
+$('#projList').addEventListener('change', e=>{ const i = e.target.closest('[data-rename]'); if(!i) return; const p = project(i.dataset.rename); p.name = i.value.trim()||p.name; touch(p); save(); });
+$('#projList').addEventListener('click', e=>{
+  const c = e.target.closest('[data-color]'); if(c){ const [id,col]=c.dataset.color.split('|'); const p=project(id); p.color=col; touch(p); renderProjList(); save(); return; }
+  const d = e.target.closest('[data-del]'); if(d){ const p=project(d.dataset.del); const n = state.tasks.filter(x=>x.projectId===p.id).length; if(!confirm(`Delete "${p.name}"${n?' and its '+n+' tasks':''}?`)) return;
+    state.tasks.filter(x=>x.projectId===p.id).forEach(x=>state.deleted[x.id]=new Date().toISOString()); state.tasks = state.tasks.filter(x=>x.projectId!==p.id); state.deleted[p.id]=new Date().toISOString(); state.projects = state.projects.filter(x=>x.id!==p.id); renderProjList(); save(); }
+});
+
+function download(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+$('#pJson').onclick = ()=>download('planner-data.json', JSON.stringify(state,null,2), 'application/json');
+$('#pImport').onclick = ()=>$('#pFile').click();
+$('#pFile').onchange = e=>{ const f = e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ const s = JSON.parse(t); if(!s.projects||!s.tasks) throw 0; state = merge(state, s); save(); renderProjList(); $('#pErr').textContent='Imported and merged.'; }catch(err){ $('#pErr').textContent='That file is not a planner export.'; } }); e.target.value=''; };
+$('#pExport').onclick = ()=>{
+  const out = state.projects.map(p=>{ const ts = state.tasks.filter(x=>x.projectId===p.id);
+    const line = x => `- [${x.done?'x':' '}] ${x.title}${x.priority==='P1'?' ⏫':''}${x.due?' 📅 '+x.due:''}${x.done&&x.doneAt?' ✅ '+x.doneAt:''}`;
+    return `<!-- file: Projects/${p.name}.md -->\n---\ntype: project\nstatus: active\npriority: P2\ndeadline: \nowner: me\n---\n\n# ${p.name}\n\n## Actions\n${ts.filter(x=>!x.done).map(line).join('\n')||'- [ ] '}\n\n## Done\n${ts.filter(x=>x.done).map(line).join('\n')}\n`; }).join('\n\n');
+  download('obsidian-export.md', out, 'text/markdown');
+};
+
+function merge(a, b){
+  const del = Object.assign({}, a.deleted||{}, b.deleted||{});
+  const byId = (arr)=>Object.fromEntries(arr.map(x=>[x.id,x]));
+  const pick = (x,y)=> !y? x : !x? y : ((x.updatedAt||'')>=(y.updatedAt||'')? x : y);
+  const mergeList = (la, lb)=>{ const A=byId(la), B=byId(lb); return [...new Set([...Object.keys(A),...Object.keys(B)])].map(id=>pick(A[id],B[id])).filter(x=>!(del[x.id] && del[x.id] > (x.updatedAt||''))); };
+  return { projects: mergeList(a.projects,b.projects), tasks: mergeList(a.tasks,b.tasks), deleted: del, updatedAt: new Date().toISOString() };
+}
+
+let cfg = {}; try{ cfg = JSON.parse(localStorage.getItem(LS_CFG))||{}; }catch(e){}
+function setStatus(msg, err){ const s=$('#syncState'); s.textContent=msg; s.classList.toggle('err',!!err); }
+function cfgOk(){ return cfg.owner && cfg.repo && cfg.token; }
+$('#btnSync').onclick = ()=> cfgOk()? sync() : openSync();
+function openSync(){ ['owner','repo','branch','path','token'].forEach(k=>$('#s'+k[0].toUpperCase()+k.slice(1)).value = cfg[k]||(k==='branch'?'main':k==='path'?'planner-data.json':'')); $('#sErr').textContent=''; $('#syncModal').classList.add('open'); }
+$('#sClose').onclick = ()=>$('#syncModal').classList.remove('open');
+$('#sForget').onclick = ()=>{ cfg={}; localStorage.removeItem(LS_CFG); $('#syncModal').classList.remove('open'); setStatus('Token forgotten'); };
+$('#sSave').onclick = ()=>{ cfg = { owner:$('#sOwner').value.trim(), repo:$('#sRepo').value.trim(), branch:$('#sBranch').value.trim()||'main', path:$('#sPath').value.trim()||'planner-data.json', token:$('#sToken').value.trim() };
+  if(!cfgOk()){ $('#sErr').textContent='Owner, repository and token are required'; return; } localStorage.setItem(LS_CFG, JSON.stringify(cfg)); $('#syncModal').classList.remove('open'); sync(); };
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); }));
+
+async function gh(method, body){
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}${method==='GET'?'?ref='+encodeURIComponent(cfg.branch)+'&t='+Date.now():''}`;
+  const r = await fetch(url, { method, headers: { Authorization: 'Bearer '+cfg.token, Accept: 'application/vnd.github+json', ...(body?{'Content-Type':'application/json'}:{}) }, body: body?JSON.stringify(body):undefined });
+  if (r.status===404 && method==='GET') return null;
+  if (!r.ok){ const j = await r.json().catch(()=>({})); throw new Error(r.status===401?'Token rejected. Check it has Contents read/write on this repo.': (j.message||('GitHub error '+r.status))); }
+  return r.json();
+}
+const b64e = s => btoa(unescape(encodeURIComponent(s))), b64d = s => decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
+async function sync(){
+  const btn = $('#btnSync'); btn.disabled = true; setStatus('Syncing…');
+  try {
+    const remote = await gh('GET');
+    let sha = null, merged = state;
+    if (remote){ sha = remote.sha; const rs = JSON.parse(b64d(remote.content)); merged = merge(state, rs); }
+    state = merged; localStorage.setItem(LS_KEY, JSON.stringify(state)); render();
+    await gh('PUT', { message: 'planner sync '+new Date().toISOString(), content: b64e(JSON.stringify(state,null,2)), branch: cfg.branch, ...(sha?{sha}:{}) });
+    setStatus('Synced ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  } catch(e){ setStatus(e.message, true); }
+  btn.disabled = false;
+}
+
+render();
+if (cfgOk()) sync();
+})();
+</script>
+</body>
+</html>
